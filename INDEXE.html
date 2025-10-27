@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Banque Horizon — Demo complète (tout-en-un)</title>
+<meta name="description" content="Démo complète d'un site bancaire : comptes, crédits, simulateur, virements, placements, assurances, espace client (simulation) — tout en un fichier." />
+<style>
+/* ----------------- THEME & RESET ----------------- */
+:root{
+  --bg:#f6fbff; --card:#ffffff; --muted:#64748b;
+  --accent1:#0077b6; --accent2:#00b4d8; --gold:#ffba08;
+  --danger:#ef4444; --success:#16a34a;
+  --radius:12px; --shadow:0 10px 30px rgba(2,6,23,0.08);
+  --glass: rgba(255,255,255,0.7);
+  font-family: Inter, Roboto, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+  color-scheme: light;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:linear-gradient(180deg,var(--bg),#f1f7fb);
+  color:#0b2540;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
+}
+/* Container */
+.container{max-width:1200px;margin:0 auto;padding:1rem;}
+
+/* ---------- Header ---------- */
+.header{
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  color:#fff;padding:.9rem 1rem;border-radius:14px;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;position:sticky;top:12px;z-index:40;
+}
+.brand{display:flex;align-items:center;gap:.75rem;font-weight:800}
+.brand .logo{font-size:1.4rem}
+.brand .name{font-size:1.1rem}
+.header-right{display:flex;align-items:center;gap:.6rem}
+.search{background:rgba(255,255,255,0.12);border:0;padding:.45rem .6rem;border-radius:8px;color:#fff}
+.header a.btn{background:var(--gold);color:var(--accent1);padding:.45rem .8rem;border-radius:10px;font-weight:700;text-decoration:none}
+
+/* ---------- Layout ---------- */
+.app{display:grid;grid-template-columns:260px 1fr;gap:1rem;margin-top:1rem}
+@media(max-width:980px){.app{grid-template-columns:1fr;}}
+/* Sidebar */
+.sidebar{background:var(--card);border-radius:12px;padding:1rem;box-shadow:var(--shadow);height:calc(100vh - 140px);overflow:auto}
+.logo-mini{font-weight:800;color:var(--accent1);margin-bottom:.6rem}
+.nav{display:flex;flex-direction:column;gap:.25rem}
+.nav .nav-item{padding:.6rem .7rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;color:var(--accent1);text-decoration:none}
+.nav .nav-item:hover{background:linear-gradient(90deg,rgba(0,119,182,0.06),rgba(0,180,216,0.04))}
+.submenu{margin-left:.6rem;display:none;flex-direction:column;gap:.2rem;margin-top:.4rem}
+.nav .has-children.open .submenu{display:flex}
+.small{font-size:.9rem;color:var(--muted)}
+
+/* ---------- Main content ---------- */
+.main{min-height:70vh}
+.panel{background:var(--card);padding:1rem;border-radius:12px;box-shadow:var(--shadow);margin-bottom:1rem}
+.grid{display:grid;gap:1rem}
+.grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.grid.cols-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:980px){.grid.cols-3,.grid.cols-2{grid-template-columns:1fr}}
+.h1{font-size:1.6rem;font-weight:700;color:var(--accent1);margin-bottom:.6rem}
+
+/* ---------- Cards ---------- */
+.card{border-radius:12px;padding:1rem;background:linear-gradient(180deg,white, #fbfdff);box-shadow:0 6px 18px rgba(2,6,23,0.04)}
+.account-balance{display:flex;flex-direction:column;gap:.25rem}
+.account-balance .amount{font-size:1.4rem;font-weight:800;color:var(--accent1)}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:10px;border:0;cursor:pointer}
+.btn.primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff}
+.btn.ghost{background:transparent;border:1px solid #e6eef8;color:var(--accent1)}
+.btn.warn{background:var(--gold);color:var(--accent1);font-weight:700}
+
+/* ---------- Forms ---------- */
+.form-row{display:flex;gap:.6rem;align-items:center}
+.form-row .field{flex:1}
+.input{width:100%;padding:.6rem;border-radius:8px;border:1px solid #dfeaf4;background:#fff}
+
+/* ---------- Transactions list ---------- */
+.tx-list{display:flex;flex-direction:column;gap:.5rem}
+.tx{display:flex;justify-content:space-between;padding:.6rem;border-radius:8px;background:linear-gradient(90deg,#fff,#fbfdff);border:1px solid #eef6fb}
+
+/* ---------- Simulateur (Loan) ---------- */
+.sim-results{margin-top:.6rem;padding:.6rem;border-radius:8px;background:linear-gradient(90deg,#f6fbff,#ffffff);border:1px solid #e5f4fb}
+
+/* ---------- Portfolio ---------- */
+.portfolio{display:grid;grid-template-columns:1fr 200px;gap:1rem}
+.portfolio .left{min-height:120px}
+@media(max-width:980px){.portfolio{grid-template-columns:1fr}}
+
+/* ---------- Messages & Docs ---------- */
+.messages{display:flex;flex-direction:column;gap:.6rem}
+.message-item{padding:.6rem;border-radius:8px;background:#fff;border:1px solid #eef6fb}
+
+/* ---------- Footer ---------- */
+.footer{margin-top:1rem;text-align:center;color:var(--muted);font-size:.9rem}
+
+/* ---------- Minor ---------- */
+.kv{display:flex;flex-direction:column;gap:.2rem}
+.kv .label{font-size:.85rem;color:var(--muted)}
+.kv .value{font-weight:700;color:var(--accent1)}
+.helper{font-size:.85rem;color:var(--muted);margin-top:.4rem}
+
+/* tiny animations */
+.fade {transition:opacity .22s ease, transform .22s ease}
+.hide{display:none}
+
+/* accessibility */
+a:focus,button:focus,input:focus{outline:3px solid rgba(0,119,182,.12);outline-offset:2px}
+
+/* ---------- Responsive tweaks ---------- */
+@media(max-width:720px){ .header{flex-direction:column;align-items:flex-start;gap:.6rem} .sidebar{height:auto} }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <header class="header" role="banner">
+      <div class="brand">
+        <div class="logo">🏦</div>
+        <div class="name">Banque Horizon — Demo</div>
+      </div>
+      <div class="header-right">
+        <input class="search" placeholder="Rechercher un service, exemple : 'Crédit'">
+        <a href="#espace-client" id="navLogin" class="btn" style="background:rgba(255,255,255,.12);color:#fff">Se connecter</a>
+        <a id="signupBtn" class="btn" href="#contact" style="background:var(--gold);color:var(--accent1)">Ouvrir un compte</a>
+      </div>
+    </header>
+
+    <div class="app" role="main" aria-live="polite">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" role="navigation" aria-label="Navigation principale">
+        <div class="logo-mini">Menu</div>
+        <nav class="nav" id="mainNav">
+          <a href="#accueil" class="nav-item">Accueil</a>
+
+          <div class="nav-item has-children" data-key="particuliers">
+            <span>Particuliers ▾</span>
+            <span class="small">●</span>
+            <div class="submenu">
+              <a href="#comptes" class="nav-item">Comptes et cartes</a>
+              <a href="#credits" class="nav-item">Crédits</a>
+              <a href="#assurances" class="nav-item">Assurances</a>
+              <a href="#bourse" class="nav-item">Bourse & placements</a>
+              <a href="#services" class="nav-item">Services en ligne</a>
+            </div>
+          </div>
+
+          <a href="#professionnels" class="nav-item">Professionnels</a>
+          <a href="#entreprises" class="nav-item">Entreprises</a>
+
+          <div class="nav-item has-children" data-key="privee">
+            <span>Banque privée ▾</span>
+            <span class="small">●</span>
+            <div class="submenu">
+              <a href="#gestion-patrimoine" class="nav-item">Gestion de patrimoine</a>
+              <a href="#investissements" class="nav-item">Investissements</a>
+              <a href="#accompagnement" class="nav-item">Accompagnement</a>
+            </div>
+          </div>
+
+          <a href="#a-propos" class="nav-item">À propos</a>
+          <a href="#espace-client" class="nav-item">Espace client</a>
+          <a href="#aide" class="nav-item">Aide & support</a>
+          <a href="#mentions" class="nav-item">Mentions légales</a>
+        </nav>
+
+        <div style="margin-top:.8rem">
+          <div class="small">Conseils rapides</div>
+          <div class="helper">Taux crédit: <strong>à partir de 2.5%</strong></div>
+          <div class="helper">Support: <strong>support@banquehorizon.demo</strong></div>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <section class="main">
+        <!-- ACCUEIL -->
+        <div id="accueil" class="panel fade">
+          <div class="h1">Tableau de bord public</div>
+          <div class="grid cols-3" style="margin-top:1rem">
+            <div class="card">
+              <div class="account-balance">
+                <div class="small">Solde total (estimé)</div>
+                <div class="amount" id="totalBalance">-- €</div>
+                <div class="small">Comptes disponibles: <strong id="acctCount">--</strong></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="small">Dernière offre</div>
+              <div style="font-weight:700;margin-top:.4rem">Crédit immobilier à 1.9%*</div>
+              <div class="helper">Offre limitée — contact en agence</div>
+            </div>
+            <div class="card">
+              <div class="small">Actions rapides</div>
+              <div style="display:flex;gap:.5rem;margin-top:.6rem">
+                <button class="btn primary" id="quickSim">Simulateur</button>
+                <button class="btn ghost" id="quickContact">Contact</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPTES & CARTES -->
+        <div id="comptes" class="panel fade hide">
+          <div class="h1">Comptes & Cartes</div>
+          <div class="grid cols-2" style="margin-top:1rem">
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div class="small">Compte courant</div>
+                  <div class="amount" id="compteCourantBalance">-- €</div>
+                  <div class="small">IBAN: <span id="compteCourantIban">--</span></div>
+                </div>
+                <div>
+                  <button class="btn primary" id="newTransfer">Faire un virement</button>
+                </div>
+              </div>
+
+              <div style="margin-top:.8rem">
+                <div class="small">Opérations récentes</div>
+                <div class="tx-list" id="txRecent"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="small">Cartes</div>
+              <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.6rem">
+                <div class="card" style="padding:.6rem;display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>Carte Visa</strong><div class="small">Type: Débit</div></div>
+                  <div><button class="btn ghost">Bloquer</button></div>
+                </div>
+                <div class="card" style="padding:.6rem;display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>Carte Gold</strong><div class="small">Type: Crédit</div></div>
+                  <div><button class="btn ghost">Voir limites</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CREDITS -->
+        <div id="credits" class="panel fade hide">
+          <div class="h1">Crédits</div>
+          <div class="grid cols-2" style="margin-top:1rem">
+            <div class="card">
+              <h3>Simulateur de prêt</h3>
+              <div class="helper">Estimez votre mensualité et visualisez un résumé d'amortissement.</div>
+              <div style="margin-top:.6rem">
+                <div class="form-row">
+                  <div class="field"><input class="input" id="loanAmount" type="number" placeholder="Montant (€)"></div>
+                </div>
+                <div class="form-row">
+                  <div class="field"><input class="input" id="loanRate" type="number" step="0.01" placeholder="Taux annuel (%)"></div>
+                  <div class="field"><input class="input" id="loanYears" type="number" placeholder="Durée (années)"></div>
+                </div>
+                <div style="margin-top:.6rem"><button class="btn primary" id="calcLoan">Calculer</button></div>
+                <div class="sim-results" id="loanResult" aria-live="polite"></div>
+                <div class="helper" style="margin-top:.6rem">*Exemple indicatif, simulation non-contractuelle.</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Crédit immobilier</h3>
+              <p class="small">Taux compétitifs, accompagnement personnalisé, assurance emprunteur disponible.</p>
+              <div style="margin-top:.6rem"><button class="btn warn" id="contactMortgage">Demander une étude</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ASSURANCES -->
+        <div id="assurances" class="panel fade hide">
+          <div class="h1">Assurances</div>
+          <div class="grid cols-3" style="margin-top:1rem">
+            <div class="card">
+              <h3>Assurance habitation</h3>
+              <p class="small">Garanties biens & responsabilité civile, options vol/incendie.</p>
+            </div>
+            <div class="card">
+              <h3>Assurance auto</h3>
+              <p class="small">Formules au tiers / tous risques, assistance 24/7.</p>
+            </div>
+            <div class="card">
+              <h3>Santé & prévoyance</h3>
+              <p class="small">Compléments santé, rente invalidité, obsèques.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOURSE -->
+        <div id="bourse" class="panel fade hide">
+          <div class="h1">Bourse & placements</div>
+          <div class="portfolio panel card" style="margin-top:1rem">
+            <div class="left">
+              <h4>Portefeuille simulé</h4>
+              <div class="small">Valeur totale : <strong id="pfTotal">-- €</strong></div>
+              <div style="margin-top:.6rem" id="pfList"></div>
+            </div>
+            <div class="right">
+              <div class="card" style="padding:.6rem">
+                <div class="small">Répartition</div>
+                <div style="font-weight:700;font-size:1.1rem;margin-top:.4rem" id="pfAllocation">Actions: 60% / Fonds: 40%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SERVICES EN LIGNE -->
+        <div id="services" class="panel fade hide">
+          <div class="h1">Services en ligne</div>
+          <div class="grid cols-3" style="margin-top:1rem">
+            <div class="card">
+              <h3>Application mobile</h3>
+              <p class="small">Gérez vos comptes, virements et cartes depuis l'app.</p>
+            </div>
+            <div class="card">
+              <h3>Paiement sans contact</h3>
+              <p class="small">Apple Pay, Google Pay et carte NFC prises en charge.</p>
+            </div>
+            <div class="card">
+              <h3>Sécurité & alertes</h3>
+              <p class="small">Notifications SMS / email, verrouillage instantané des cartes.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFESSIONNELS -->
+        <div id="professionnels" class="panel fade hide">
+          <div class="h1">Professionnels</div>
+          <div class="card" style="margin-top:1rem">
+            <p>Offres pour indépendants et petites structures : comptes pro, financements, solutions de paiement.</p>
+          </div>
+        </div>
+
+        <!-- ENTREPRISES -->
+        <div id="entreprises" class="panel fade hide">
+          <div class="h1">Entreprises</div>
+          <div class="card" style="margin-top:1rem">
+            <p>Gestion de trésorerie, crédit export, services spécialisés et conseils corporate.</p>
+          </div>
+        </div>
+
+        <!-- BANQUE PRIVEE -->
+        <div id="gestion-patrimoine" class="panel fade hide">
+          <div class="h1">Gestion de patrimoine</div>
+          <div class="card" style="margin-top:1rem">Accompagnement sur mesure, arbitrages patrimoniaux et stratégies fiscales.</div>
+        </div>
+        <div id="investissements" class="panel fade hide">
+          <div class="h1">Investissements</div>
+          <div class="card" style="margin-top:1rem">Solutions privées, accès à des produits exclusifs et conseil dédié.</div>
+        </div>
+        <div id="accompagnement" class="panel fade hide">
+          <div class="h1">Accompagnement sur mesure</div>
+          <div class="card" style="margin-top:1rem">Votre conseiller dédié pour stratégie long terme.</div>
+        </div>
+
+        <!-- A PROPOS -->
+        <div id="a-propos" class="panel fade hide">
+          <div class="h1">À propos</div>
+          <div class="card" style="margin-top:1rem">
+            <p>Banque Horizon — démo. Historique, gouvernance, carrières, engagements RSE.</p>
+          </div>
+        </div>
+
+        <!-- ESPACE CLIENT -->
+        <div id="espace-client" class="panel fade hide">
+          <div class="h1">Espace client</div>
+          <div id="clientArea" class="card">
+            <!-- Si non connecté: formulaire, sinon dashboard client -->
+            <div id="clientNotAuth">
+              <div class="small">Connexion sécurisée (démo)</div>
+              <div style="margin-top:.6rem">
+                <div class="form-row"><input id="loginEmail" class="input" placeholder="E-mail de connexion (demo)"></div>
+                <div class="form-row"><input id="loginPwd" type="password" class="input" placeholder="Mot de passe"></div>
+                <div style="margin-top:.6rem;display:flex;gap:.5rem">
+                  <button class="btn primary" id="loginBtn">Se connecter</button>
+                  <button class="btn ghost" id="demoFill">Remplir demo</button>
+                </div>
+                <div class="helper">Utilise <strong>client@test.local / Banque2025!</strong> pour la démo</div>
+              </div>
+            </div>
+
+            <div id="clientAuth" class="hide">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><strong id="clientName">Client</strong><div class="small" id="clientMemberSince">Membre depuis 2020</div></div>
+                <div><button class="btn ghost" id="logoutBtn">Se déconnecter</button></div>
+              </div>
+
+              <div style="margin-top:1rem" id="clientDashboard">
+                <div class="grid cols-2">
+                  <div class="card">
+                    <div class="small">Solde compte courant</div>
+                    <div class="amount" id="clientBalance">-- €</div>
+                    <div style="margin-top:.6rem" class="small">IBAN: <span id="clientIban">--</span></div>
+                  </div>
+                  <div class="card">
+                    <div class="small">Virements</div>
+                    <button class="btn primary" id="startTransfer">Nouveau virement</button>
+                    <div class="helper" style="margin-top:.6rem">Vos virements sont simulés et sauvegardés localement.</div>
+                  </div>
+                </div>
+
+                <div style="margin-top:1rem" class="card">
+                  <h4>Dernières opérations</h4>
+                  <div id="clientTxList" class="tx-list" style="margin-top:.6rem"></div>
+                </div>
+
+                <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                  <div class="card">
+                    <h4>Documents & relevés</h4>
+                    <ul id="docList" style="margin-top:.6rem"></ul>
+                  </div>
+                  <div class="card">
+                    <h4>Messagerie sécurisée</h4>
+                    <div id="msgList" class="messages" style="margin-top:.6rem"></div>
+                    <div style="margin-top:.6rem">
+                      <input class="input" id="msgInput" placeholder="Écrire un message au support...">
+                      <div style="display:flex;justify-content:flex-end;margin-top:.4rem"><button class="btn primary" id="sendMsg">Envoyer</button></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- AIDE & SUPPORT -->
+        <div id="aide" class="panel fade hide">
+          <div class="h1">Aide & support</div>
+          <div class="card" style="margin-top:1rem">
+            <h4>FAQ</h4>
+            <details style="margin-top:.5rem"><summary>Comment ouvrir un compte ?</summary><p style="margin-top:.4rem">Cliquez sur "Ouvrir un compte" ou contactez une agence.</p></details>
+            <details style="margin-top:.5rem"><summary>Comment déclarer une carte perdue ?</summary><p style="margin-top:.4rem">Bloquez la carte immédiatement depuis l'espace client ou appelez le support.</p></details>
+          </div>
+        </div>
+
+        <!-- MENTIONS -->
+        <div id="mentions" class="panel fade hide">
+          <div class="h1">Mentions légales & Sécurité</div>
+          <div class="card" style="margin-top:1rem">
+            <h4>RGPD & données personnelles</h4>
+            <p class="small">Démo : aucune donnée sensible n'est transférée à un serveur. Pour production : chiffrement, back-end sécurisé et conformité RGPD obligatoires.</p>
+          </div>
+        </div>
+
+        <!-- TRANSFER FORM MODAL (hidden) -->
+        <div id="transferModal" class="panel hide" style="position:relative">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="h1">Virement - Simulation</div>
+            <button class="btn ghost" id="closeTransfer">Fermer</button>
+          </div>
+          <div class="card" style="margin-top:1rem">
+            <div class="form-row">
+              <input id="transferTo" class="input" placeholder="Bénéficiaire (IBAN ou Email)">
+            </div>
+            <div class="form-row" style="margin-top:.6rem">
+              <input id="transferAmount" class="input" type="number" placeholder="Montant (€)">
+            </div>
+            <div style="margin-top:.6rem;display:flex;gap:.5rem;justify-content:flex-end">
+              <button class="btn ghost" id="cancelTransfer">Annuler</button>
+              <button class="btn primary" id="confirmTransfer">Confirmer</button>
+            </div>
+            <div class="helper" style="margin-top:.6rem">Virement simulé : il sera stocké dans l'historique local.</div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <div class="footer">© <span id="year"></span> Banque Horizon — Démo. Toutes les fonctionnalités sont simulées.</div>
+  </div>
+
+<script>
+/* ----------------- Single-file SPA logic + simulated backend ----------------- */
+/* Demo credentials & demo user data */
+const DEMO_USER = { email:'client@test.local', password:'Banque2025!', name:'Alyssa Dupont', memberSince:2020 };
+const STORAGE_KEY = 'bh_demo_state_v1';
+
+/* Default demo state (accounts, transactions, docs, messages) */
+const defaultState = {
+  user: DEMO_USER,
+  loggedIn: false,
+  clientsession: null, // will hold {email, name, loginAt}
+  accounts: [
+    { id:'FR76 1111 2222 3333', type:'Compte courant', balance:2150.45, currency:'EUR' },
+    { id:'LA-9876543', type:'Livret A', balance:10240.00, currency:'EUR' },
+    { id:'PEA-2025', type:'PEA', balance:54230.67, currency:'EUR' }
+  ],
+  transactions:[
+    {acct:'FR76 1111 2222 3333', date:Date.now()-86400000*3, label:'Salaire', amount:1500.00},
+    {acct:'FR76 1111 2222 3333', date:Date.now()-86400000*2, label:'Épicerie', amount:-67.45},
+    {acct:'FR76 1111 2222 3333', date:Date.now()-86400000*1, label:'Abonnement', amount:-12.99},
+  ],
+  docs:[
+    {id:'R2025-01', title:'Relevé Janvier 2025', date:'2025-01-31'},
+    {id:'R2025-02', title:'Relevé Février 2025', date:'2025-02-28'}
+  ],
+  messages:[
+    {id:1,from:'Support',date:Date.now()-86400000*4,subject:'Bienvenue',body:'Bienvenue chez Banque Horizon+. Nous sommes à votre écoute.'}
+  ],
+  portfolio:[
+    {symbol:'HZN',name:'Horizon Tech',value:20000,change:0.024},
+    {symbol:'FND',name:'Fonds Sécurisé',value:15000,change:-0.005},
+    {symbol:'ETF',name:'ETF Monde',value:19230,change:0.013}
+  ]
+};
+
+/* Load or init state */
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultState;
+localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); // ensure stored
+
+/* Utility helpers */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const fmt = n => n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
+const nowYear = new Date().getFullYear(); $('#year').textContent = nowYear;
+
+/* Simple router: show/hide sections by id on hash change */
+function showSection(hash){
+  if(!hash) hash = '#accueil';
+  if(hash[0] !== '#') hash = '#'+hash;
+  // hide all panels
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.add('hide');
+  });
+  // show transfer modal separately
+  if(hash === '#transferModal'){ $('#transferModal').classList.remove('hide'); return; }
+  // show the target
+  const target = document.querySelector(hash);
+  if(target) target.classList.remove('hide');
+  // scroll top main
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+window.addEventListener('hashchange', ()=> showSection(location.hash || '#accueil'));
+
+/* sidebar expand/collapse children */
+document.querySelectorAll('.has-children').forEach(el => {
+  el.addEventListener('click', (e)=>{
+    // toggle only when clicked on container, not inner links
+    if(e.target.tagName.toLowerCase() === 'a') return;
+    el.classList.toggle('open');
+  });
+});
+
+/* Navigation links: update hash */
+document.querySelectorAll('.nav .nav-item').forEach(a => {
+  a.addEventListener('click', (e)=>{
+    const href = a.getAttribute('href') || a.dataset.href || null;
+    // convert href text to id if it's an anchor, else build from text
+    let target = a.getAttribute('href');
+    if(target && target.startsWith('#')) {
+      location.hash = target;
+    } else {
+      // fallback: use innerText mapped to ids
+      const map = {
+        'Accueil':'#accueil','Comptes et cartes':'#comptes','Crédits':'#credits','Assurances':'#assurances','Bourse & placements':'#bourse',
+        'Services en ligne':'#services','Professionnels':'#professionnels','Entreprises':'#entreprises','Banque privée':'#gestion-patrimoine',
+        'À propos':'#a-propos','Espace client':'#espace-client','Aide & support':'#aide','Mentions légales':'#mentions',
+        'Comptes et cartes':'#comptes','PEA / Compte-titres':'#bourse'
+      };
+      const txt = a.textContent.trim();
+      if(map[txt]) location.hash = map[txt];
+    }
+  });
+});
+
+/* Initialize page with hash or accueil */
+showSection(location.hash || '#accueil');
+
+/* ---------- Render public stats from state ---------- */
+function renderPublicStats(){
+  const total = state.accounts.reduce((s,a)=> s + (a.balance||0), 0);
+  $('#totalBalance').textContent = fmt(total);
+  $('#acctCount').textContent = state.accounts.length;
+}
+renderPublicStats();
+
+/* ---------- Render accounts & transactions ---------- */
+function renderAccounts(){
+  const acct = state.accounts[0];
+  $('#compteCourantBalance').textContent = fmt(acct.balance);
+  $('#compteCourantIban').textContent = acct.id;
+  $('#clientBalance') && ($('#clientBalance').textContent = fmt(acct.balance));
+  $('#clientIban') && ($('#clientIban').textContent = acct.id);
+  $('#pfTotal') && ($('#pfTotal').textContent = fmt(state.portfolio.reduce((s,p)=>s+p.value,0)));
+  // recent tx
+  const recent = state.transactions.slice(-6).reverse();
+  const el = $('#txRecent');
+  if(el) { el.innerHTML = ''; recent.forEach(t => {
+    const d = new Date(t.date);
+    const node = document.createElement('div');
+    node.className = 'tx';
+    node.innerHTML = `<div><strong>${t.label}</strong><div class="small">${d.toLocaleDateString()}</div></div><div style="text-align:right">${t.amount<0?'<span style="color:#ef4444">-</span>':''}${fmt(Math.abs(t.amount))}</div>`;
+    el.appendChild(node);
+  }) }
+  // client tx list (for auth)
+  const el2 = $('#clientTxList');
+  if(el2){
+    el2.innerHTML = '';
+    const clientTx = state.transactions.slice().reverse();
+    clientTx.forEach(t => {
+      const node = document.createElement('div'); node.className='tx';
+      node.innerHTML = `<div>${new Date(t.date).toLocaleDateString()} — ${t.label}</div><div>${t.amount<0?'-':''}${fmt(Math.abs(t.amount))}</div>`;
+      el2.appendChild(node);
+    });
+  }
+  // portfolio list
+  const pfList = $('#pfList');
+  if(pfList){
+    pfList.innerHTML = '';
+    state.portfolio.forEach(p => {
+      const n = document.createElement('div'); n.style.marginBottom='.5rem';
+      n.innerHTML = `<strong>${p.symbol}</strong> — ${p.name} • <span style="font-weight:700">${fmt(p.value)}</span> <div class="small">Variation: ${(p.change*100).toFixed(2)}%</div>`;
+      pfList.appendChild(n);
+    });
+  }
+  // docs
+  const docs = $('#docList');
+  if(docs){
+    docs.innerHTML = '';
+    state.docs.forEach(d => {
+      const li = document.createElement('li'); li.textContent = `${d.title} — ${d.date}`;
+      docs.appendChild(li);
+    });
+  }
+  // messages
+  const msgs = $('#msgList');
+  if(msgs){
+    msgs.innerHTML = '';
+    state.messages.slice().reverse().forEach(m => {
+      const it = document.createElement('div'); it.className='message-item';
+      it.innerHTML = `<div style="font-weight:700">${m.subject} — <span class="small">${new Date(m.date).toLocaleString()}</span></div><div style="margin-top:.4rem">${m.body}</div>`;
+      msgs.appendChild(it);
+    });
+  }
+}
+renderAccounts();
+
+/* ---------- Simulateur de prêt - calculation & simple amort table ---------- */
+$('#calcLoan').addEventListener('click', ()=>{
+  const amount = parseFloat($('#loanAmount').value);
+  const rate = parseFloat($('#loanRate').value)/100/12;
+  const years = parseInt($('#loanYears').value);
+  const out = $('#loanResult');
+  if(!amount || !rate || !years){ out.innerHTML = '<span style="color:#ef4444">Veuillez remplir tous les champs correctement.</span>'; return; }
+  const months = years*12;
+  const monthly = (amount * rate) / (1 - Math.pow(1+rate, -months));
+  // total interest
+  const totalPay = monthly*months;
+  const totalInterest = totalPay - amount;
+  out.innerHTML = `<div>Mensualité estimée : <strong>${fmt(monthly)}</strong> / mois</div>
+                   <div class="small">Coût total (intérêts) : <strong>${fmt(totalInterest)}</strong></div>
+                   <div class="helper">Tableau d'amortissement (résumé) : principal ${fmt(amount)}, paiements ${months} mois</div>`;
+});
+
+/* ---------- Loan quick sim (header quickSim) ---------- */
+$('#quickSim').addEventListener('click', ()=> location.hash='#credits');
+
+/* ---------- Quick contact / mortgage ---------- */
+$('#quickContact').addEventListener('click', ()=> alert('Contactez-nous à support@banquehorizon.demo') );
+$('#contactMortgage').addEventListener('click', ()=> alert('Votre demande de crédit a été prise en compte (simulation).'));
+
+/* ---------- Simulate transfers ---------- */
+function openTransferModal(){
+  $('#transferModal').classList.remove('hide');
+  $('#transferModal').scrollIntoView({behavior:'smooth'});
+}
+$('#newTransfer') && $('#newTransfer').addEventListener('click', openTransferModal);
+$('#startTransfer') && $('#startTransfer').addEventListener('click', openTransferModal);
+$('#closeTransfer').addEventListener('click', ()=> $('#transferModal').classList.add('hide'));
+$('#cancelTransfer').addEventListener('click', ()=> $('#transferModal').classList.add('hide'));
+
+$('#confirmTransfer').addEventListener('click', ()=>{
+  const to = $('#transferTo').value.trim();
+  const amount = parseFloat($('#transferAmount').value);
+  if(!to || !amount || amount <=0){ alert('Veuillez renseigner un bénéficiaire et un montant valide.'); return; }
+  // deduct from account 0 if enough
+  const acc = state.accounts[0];
+  if(amount > acc.balance){ alert('Solde insuffisant (simulation).'); return; }
+  acc.balance -= amount;
+  const tx = {acct:acc.id,date:Date.now(),label:`Virement vers ${to}`,amount:-amount};
+  state.transactions.push(tx);
+  persistState();
+  renderAccounts();
+  alert('Virement simulé effectué.');
+  $('#transferModal').classList.add('hide');
+  $('#transferTo').value=''; $('#transferAmount').value='';
+});
+
+/* ---------- Demo fill login ---------- */
+$('#demoFill').addEventListener('click', ()=>{
+  $('#loginEmail').value = DEMO_USER.email;
+  $('#loginPwd').value = DEMO_USER.password;
+});
+
+/* ---------- Authentication (client-side simulated) ---------- */
+function persistState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+$('#loginBtn').addEventListener('click', ()=>{
+  const email = $('#loginEmail').value.trim();
+  const pwd = $('#loginPwd').value;
+  if(email === DEMO_USER.email && pwd === DEMO_USER.password){
+    state.loggedIn = true;
+    state.clientsession = {email:DEMO_USER.email,name:DEMO_USER.name,loginAt:Date.now()};
+    persistState();
+    showClientArea(true);
+    alert('Connexion réussie — Bienvenue ! (démo)');
+    location.hash = '#espace-client';
+  } else {
+    alert('Identifiants incorrects. Utilise le compte de démonstration indiqué.');
+  }
+});
+
+/* show/hide the authenticated client UI */
+function showClientArea(isAuth){
+  if(isAuth){
+    $('#clientNotAuth').classList.add('hide');
+    $('#clientAuth').classList.remove('hide');
+    $('#clientName').textContent = state.clientsession.name;
+    $('#clientMemberSince').textContent = 'Membre depuis ' + (state.user.memberSince || 2020);
+    renderAccounts();
+  } else {
+    $('#clientNotAuth').classList.remove('hide');
+    $('#clientAuth').classList.add('hide');
+    state.loggedIn = false; state.clientsession = null;
+    persistState();
+  }
+}
+
+/* restore session on load */
+if(state.loggedIn && state.clientsession){ showClientArea(true); } else { showClientArea(false); }
+
+/* logout */
+$('#logoutBtn').addEventListener('click', ()=>{
+  if(confirm('Se déconnecter ?')){ showClientArea(false); alert('Déconnecté.'); location.hash='#accueil'; }
+});
+
+/* send message (simulated) */
+$('#sendMsg').addEventListener('click', ()=>{
+  const body = $('#msgInput').value.trim();
+  if(!body) return alert('Écris un message.');
+  const msg = {id:Date.now(),from:'Vous',date:Date.now(),subject:'Message client',body};
+  state.messages.push(msg);
+  persistState();
+  $('#msgInput').value='';
+  renderAccounts();
+  alert('Message envoyé (simulation).');
+});
+
+/* fill demo data into UI when pressing navLogin */
+$('#navLogin').addEventListener('click', (e)=> {
+  e.preventDefault();
+  location.hash = '#espace-client';
+  // focus login email
+  setTimeout(()=>$('#loginEmail').focus(),250);
+});
+
+/* messages and docs rendered via renderAccounts -> renderMessages etc. */
+/* ensure render after state changes */
+persistState();
+renderAccounts();
+
+/* Simple keyboard accessibility: close transfer modal ESC */
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape'){
+    $('#transferModal') && $('#transferModal').classList.add('hide');
+  }
+});
+</script>
+</body>
+</html>
